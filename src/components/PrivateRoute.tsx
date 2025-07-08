@@ -15,7 +15,7 @@ const PrivateRoute = ({ children }: { children: ReactNode }) => {
           throw new Error("No token found");
         }
 
-        const response = await fetch("http://localhost:5000/api/check-auth", {
+        const response = await fetch("https://backend-kmrt.onrender.com/api/check-auth", {
           method: "GET",
           headers: {
             "Authorization": `Bearer ${token}`,
