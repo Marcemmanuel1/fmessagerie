@@ -99,7 +99,7 @@ const Page = () => {
           return;
         }
 
-        const response = await fetch("http://localhost:5000/api/check-auth", {
+        const response = await fetch("https://backend-kmrt.onrender.com/api/check-auth", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -123,7 +123,7 @@ const Page = () => {
 
         // Initialiser la connexion Socket.io une seule fois
         if (!socketRef.current) {
-          socketRef.current = io("http://localhost:5000", {
+          socketRef.current = io("https://backend-kmrt.onrender.com", {
             auth: { token },
             withCredentials: true,
           });
@@ -241,7 +241,7 @@ const Page = () => {
     setLoading(true);
     const token = localStorage.getItem("token");
 
-    const usersResponse = await fetch("http://localhost:5000/api/users", {
+    const usersResponse = await fetch("https://backend-kmrt.onrender.com/api/users", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -261,7 +261,7 @@ const Page = () => {
   const fetchConversations = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/conversations", {
+      const response = await fetch("https://backend-kmrt.onrender.com/api/conversations", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -286,7 +286,7 @@ const Page = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/profile", {
+      const response = await fetch("https://backend-kmrt.onrender.com/api/profile", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -316,7 +316,7 @@ const Page = () => {
       const token = localStorage.getItem("token");
 
       const convResponse = await fetch(
-        `http://localhost:5000/api/conversations/${selectedConversation.id}`,
+        `https://backend-kmrt.onrender.com/api/conversations/${selectedConversation.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -329,7 +329,7 @@ const Page = () => {
         setConversationId(convData.conversationId);
 
         const messagesResponse = await fetch(
-          `http://localhost:5000/api/messages/${convData.conversationId}`,
+          `https://backend-kmrt.onrender.com/api/messages/${convData.conversationId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -398,7 +398,7 @@ const Page = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/logout", {
+      const response = await fetch("https://backend-kmrt.onrender.com/api/logout", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -452,7 +452,7 @@ const Page = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/api/messages/upload",
+        "https://backend-kmrt.onrender.com/api/messages/upload",
         {
           method: "POST",
           headers: {
@@ -531,7 +531,7 @@ const Page = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:5000/api/profile", {
+      const response = await fetch("https://backend-kmrt.onrender.com/api/profile", {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -562,11 +562,11 @@ const Page = () => {
         return (
           <div className="relative group">
             <img
-              src={`http://localhost:5000${msg.fileUrl}`}
+              src={`https://backend-kmrt.onrender.com${msg.fileUrl}`}
               alt="Fichier image"
               className="max-w-xs md:max-w-md rounded-lg cursor-pointer"
               onClick={() =>
-                window.open(`http://localhost:5000${msg.fileUrl}`, "_blank")
+                window.open(`https://backend-kmrt.onrender.com${msg.fileUrl}`, "_blank")
               }
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -579,7 +579,7 @@ const Page = () => {
       }
       return (
         <a
-          href={`http://localhost:5000${msg.fileUrl}`}
+          href={`https://backend-kmrt.onrender.com${msg.fileUrl}`}
           download
           className="inline-flex items-center px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
         >
@@ -634,13 +634,13 @@ const Page = () => {
                       className="w-full h-full object-cover"
                       src={
                         user.avatar
-                          ? `http://localhost:5000${user.avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${user.avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt="Profil"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                   ) : (
@@ -696,13 +696,13 @@ const Page = () => {
                 className="w-full h-full object-cover"
                 src={
                   user.avatar
-                    ? `http://localhost:5000${user.avatar}`
-                    : "http://localhost:5000/uploads/avatars/default.jpg"
+                    ? `https://backend-kmrt.onrender.com${user.avatar}`
+                    : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                 }
                 alt="Profil"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
-                    "http://localhost:5000/uploads/avatars/default.jpg";
+                    "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                 }}
               />
             ) : (
@@ -783,13 +783,13 @@ const Page = () => {
                           className="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg"
                           src={
                             userDetails?.avatar
-                              ? `http://localhost:5000${userDetails.avatar}`
-                              : "http://localhost:5000/uploads/avatars/default.jpg"
+                              ? `https://backend-kmrt.onrender.com${userDetails.avatar}`
+                              : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                           }
                           alt="Photo de profil"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src =
-                              "http://localhost:5000/uploads/avatars/default.jpg";
+                              "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                           }}
                         />
                       </div>
@@ -847,13 +847,13 @@ const Page = () => {
                             src={
                               avatarPreview ||
                               (userDetails?.avatar
-                                ? `http://localhost:5000${userDetails.avatar}`
-                                : "http://localhost:5000/uploads/avatars/default.jpg")
+                                ? `https://backend-kmrt.onrender.com${userDetails.avatar}`
+                                : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg")
                             }
                             alt="Aperçu"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
-                                "http://localhost:5000/uploads/avatars/default.jpg";
+                                "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                             }}
                           />
                           <div className="absolute inset-0 bg-black bg-opacity-30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1003,13 +1003,13 @@ const Page = () => {
                       className="w-full h-full object-cover"
                       src={
                         user.avatar
-                          ? `http://localhost:5000${user.avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${user.avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt="Profil"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                   ) : (
@@ -1065,13 +1065,13 @@ const Page = () => {
                 className="w-full h-full object-cover"
                 src={
                   user.avatar
-                    ? `http://localhost:5000${user.avatar}`
-                    : "http://localhost:5000/uploads/avatars/default.jpg"
+                    ? `https://backend-kmrt.onrender.com${user.avatar}`
+                    : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                 }
                 alt="Profil"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
-                    "http://localhost:5000/uploads/avatars/default.jpg";
+                    "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                 }}
               />
             ) : (
@@ -1148,14 +1148,14 @@ const Page = () => {
                         <img
                           src={
                             user.avatar
-                              ? `http://localhost:5000${user.avatar}`
-                              : "http://localhost:5000/uploads/avatars/default.jpg"
+                              ? `https://backend-kmrt.onrender.com${user.avatar}`
+                              : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                           }
                           alt={user.name}
                           className="w-10 h-10 rounded-full object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src =
-                              "http://localhost:5000/uploads/avatars/default.jpg";
+                              "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                           }}
                         />
                         <div
@@ -1232,13 +1232,13 @@ const Page = () => {
                     className="w-full h-full object-cover"
                     src={
                       user.avatar
-                        ? `http://localhost:5000${user.avatar}`
-                        : "http://localhost:5000/uploads/avatars/default.jpg"
+                        ? `https://backend-kmrt.onrender.com${user.avatar}`
+                        : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                     }
                     alt="Profil"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
-                        "http://localhost:5000/uploads/avatars/default.jpg";
+                        "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                     }}
                   />
                 ) : (
@@ -1294,13 +1294,13 @@ const Page = () => {
               className="w-full h-full object-cover"
               src={
                 user.avatar
-                  ? `http://localhost:5000${user.avatar}`
-                  : "http://localhost:5000/uploads/avatars/default.jpg"
+                  ? `https://backend-kmrt.onrender.com${user.avatar}`
+                  : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
               }
               alt="Profil"
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
-                  "http://localhost:5000/uploads/avatars/default.jpg";
+                  "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
               }}
             />
           ) : (
@@ -1387,14 +1387,14 @@ const Page = () => {
                       <img
                         src={
                           user.avatar
-                            ? `http://localhost:5000${user.avatar}`
-                            : "http://localhost:5000/uploads/avatars/default.jpg"
+                            ? `https://backend-kmrt.onrender.com${user.avatar}`
+                            : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                         }
                         alt={user.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            "http://localhost:5000/uploads/avatars/default.jpg";
+                            "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                         }}
                       />
                       <div
@@ -1444,14 +1444,14 @@ const Page = () => {
                     <img
                       src={
                         conv.other_user_avatar
-                          ? `http://localhost:5000${conv.other_user_avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${conv.other_user_avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt={conv.other_user_name}
                       className="w-12 h-12 rounded-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                     <div
@@ -1533,14 +1533,14 @@ const Page = () => {
                     <img
                       src={
                         user.avatar
-                          ? `http://localhost:5000${user.avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${user.avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt={user.name}
                       className="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                     <div
@@ -1590,14 +1590,14 @@ const Page = () => {
                   <img
                     src={
                       conv.other_user_avatar
-                        ? `http://localhost:5000${conv.other_user_avatar}`
-                        : "http://localhost:5000/uploads/avatars/default.jpg"
+                        ? `https://backend-kmrt.onrender.com${conv.other_user_avatar}`
+                        : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                     }
                     alt={conv.other_user_name}
                     className="w-12 h-12 rounded-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
-                        "http://localhost:5000/uploads/avatars/default.jpg";
+                        "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                     }}
                   />
                   <div
@@ -1661,14 +1661,14 @@ const Page = () => {
                     <img
                       src={
                         selectedConversation.avatar
-                          ? `http://localhost:5000${selectedConversation.avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${selectedConversation.avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt="Profil"
                       className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                     <div
@@ -1734,14 +1734,14 @@ const Page = () => {
                     <img
                       src={
                         selectedConversation.avatar
-                          ? `http://localhost:5000${selectedConversation.avatar}`
-                          : "http://localhost:5000/uploads/avatars/default.jpg"
+                          ? `https://backend-kmrt.onrender.com${selectedConversation.avatar}`
+                          : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                       }
                       alt="Profil"
                       className="w-10 h-10 rounded-full object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
-                          "http://localhost:5000/uploads/avatars/default.jpg";
+                          "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                       }}
                     />
                     <div
@@ -1894,14 +1894,14 @@ const Page = () => {
                   <img
                     src={
                       selectedConversation.avatar
-                        ? `http://localhost:5000${selectedConversation.avatar}`
-                        : "http://localhost:5000/uploads/avatars/default.jpg"
+                        ? `https://backend-kmrt.onrender.com${selectedConversation.avatar}`
+                        : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                     }
                     alt="Profil"
                     className="w-10 h-10 rounded-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
-                        "http://localhost:5000/uploads/avatars/default.jpg";
+                        "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                     }}
                   />
                   <div
@@ -2050,14 +2050,14 @@ const Page = () => {
                   <img
                     src={
                       selectedConversation.avatar
-                        ? `http://localhost:5000${selectedConversation.avatar}`
-                        : "http://localhost:5000/uploads/avatars/default.jpg"
+                        ? `https://backend-kmrt.onrender.com${selectedConversation.avatar}`
+                        : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
                     }
                     alt="Profil"
                     className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
-                        "http://localhost:5000/uploads/avatars/default.jpg";
+                        "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
                     }}
                   />
                   <div
