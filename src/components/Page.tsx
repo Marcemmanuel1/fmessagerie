@@ -89,64 +89,6 @@ const Page = () => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Vérification de l'authentification et initialisation
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          navigate("/");
-          return;
-        }
-
-        const response = await fetch("https://backend-kmrt.onrender.com/api/check-auth", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          localStorage.removeItem("token");
-          navigate("/");
-          return;
-        }
-
-        const data = await response.json();
-        if (!data.isAuthenticated) {
-          localStorage.removeItem("token");
-          navigate("/");
-          return;
-        }
-
-        setUser(data.user);
-        fetchInitialData();
-
-        // Initialiser la connexion Socket.io une seule fois
-        if (!socketRef.current) {
-          socketRef.current = io("https://backend-kmrt.onrender.com", {
-            auth: { token },
-            withCredentials: true,
-          });
-
-          setupSocketListeners();
-        }
-      } catch (err) {
-        console.error("Erreur vérification auth:", err);
-        localStorage.removeItem("token");
-        navigate("/");
-      }
-    };
-
-    checkAuth();
-
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
-    };
-  }, [navigate]);
-
   // Configuration des écouteurs Socket.io
   const setupSocketListeners = useCallback(() => {
     if (!socketRef.current || !user) return;
@@ -207,7 +149,23 @@ const Page = () => {
     };
 
     const handleNewConversation = (conversation: Conversation) => {
-      setConversations(prev => [conversation, ...prev]);
+      setConversations(prev => {
+        const exists = prev.some(c => c.id === conversation.id);
+        if (exists) return prev;
+        return [conversation, ...prev];
+      });
+      
+      if (selectedConversation?.id === conversation.other_user_id) {
+        setConversationId(conversation.id);
+        fetchConversationMessages();
+      }
+    };
+
+    const handleNewUser = (newUser: User) => {
+      setUsers(prevUsers => {
+        if (prevUsers.some(u => u.id === newUser.id)) return prevUsers;
+        return [...prevUsers, newUser];
+      });
     };
 
     socket.on("new-message", handleNewMessage);
@@ -215,6 +173,7 @@ const Page = () => {
     socket.on("conversation-updated", handleConversationUpdated);
     socket.on("user-status-changed", handleUserStatusChanged);
     socket.on("new-conversation", handleNewConversation);
+    socket.on("new-user", handleNewUser);
 
     return () => {
       socket.off("new-message", handleNewMessage);
@@ -222,6 +181,7 @@ const Page = () => {
       socket.off("conversation-updated", handleConversationUpdated);
       socket.off("user-status-changed", handleUserStatusChanged);
       socket.off("new-conversation", handleNewConversation);
+      socket.off("new-user", handleNewUser);
     };
   }, [user, conversationId, selectedConversation]);
 
@@ -232,20 +192,85 @@ const Page = () => {
     }
   }, [setupSocketListeners, user]);
 
+  // Vérification de l'authentification et initialisation
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/");
+          return;
+        }
+
+        const response = await fetch("https://backend-kmrt.onrender.com/api/check-auth", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          localStorage.removeItem("token");
+          navigate("/");
+          return;
+        }
+
+        const data = await response.json();
+        if (!data.isAuthenticated) {
+          localStorage.removeItem("token");
+          navigate("/");
+          return;
+        }
+
+        setUser(data.user);
+        fetchInitialData();
+
+        // Initialiser la connexion Socket.io
+        if (!socketRef.current) {
+          socketRef.current = io("https://backend-kmrt.onrender.com", {
+            auth: { token },
+            withCredentials: true,
+          });
+
+          socketRef.current.on('connect', () => {
+            fetchInitialData();
+            if (selectedConversation) {
+              fetchConversationMessages();
+            }
+          });
+
+          setupSocketListeners();
+        }
+      } catch (err) {
+        console.error("Erreur vérification auth:", err);
+        localStorage.removeItem("token");
+        navigate("/");
+      }
+    };
+
+    checkAuth();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [navigate]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const fetchInitialData = async () => {
-  try {
-    setLoading(true);
-    const token = localStorage.getItem("token");
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
 
-    const usersResponse = await fetch("https://backend-kmrt.onrender.com/api/users", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const usersResponse = await fetch("https://backend-kmrt.onrender.com/api/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const usersData = await usersResponse.json();
       if (usersData.success) setUsers(usersData.users);
 
@@ -303,7 +328,7 @@ const Page = () => {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue");
-  navigate("/");
+      navigate("/");
     } finally {
       setLoading(false);
     }
