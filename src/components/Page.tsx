@@ -21,6 +21,8 @@ import {
 import { BsThreeDotsVertical, BsCheckAll } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
 import io, { Socket } from "socket.io-client";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface User {
   id: number;
@@ -42,6 +44,7 @@ interface Conversation {
   last_message?: string;
   last_message_time?: string;
   unread_count: number;
+  isNew?: boolean;
 }
 
 interface Message {
@@ -79,25 +82,23 @@ const Page = () => {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileConversationList, setShowMobileConversationList] = useState(false);
   const [showMobileUserDetails, setShowMobileUserDetails] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const messagesRef = useRef<Message[]>([]);
 
-  // Mise à jour de la référence des messages
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // Configuration des écouteurs Socket.io
   const setupSocketListeners = useCallback(() => {
     if (!socketRef.current || !user) return;
 
     const socket = socketRef.current;
 
     const handleNewMessage = (message: Message) => {
-      setMessages(prev => {
-        if (prev.some(m => m.id === message.id)) return prev;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
       });
 
@@ -107,14 +108,15 @@ const Page = () => {
         });
       }
 
-      setConversations(prev =>
-        prev.map(conv =>
+      setConversations((prev) =>
+        prev.map((conv) =>
           conv.id === message.conversationId
             ? {
                 ...conv,
                 last_message: message.content || "Fichier",
                 last_message_time: message.created_at,
-                unread_count: message.sender_id === user.id ? 0 : conv.unread_count + 1,
+                unread_count:
+                  message.sender_id === user.id ? 0 : conv.unread_count + 1,
               }
             : conv
         )
@@ -122,39 +124,51 @@ const Page = () => {
     };
 
     const handleMessageSent = (message: Message) => {
-      setMessages(prev => {
-        if (prev.some(m => m.id === message.id)) return prev;
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
       });
     };
 
     const handleConversationUpdated = (conversation: Conversation) => {
-      setConversations(prev =>
-        prev.map(conv => (conv.id === conversation.id ? conversation : conv))
+      setConversations((prev) =>
+        prev.map((conv) => (conv.id === conversation.id ? conversation : conv))
       );
     };
 
     const handleUserStatusChanged = ({ userId, status }: { userId: number; status: string }) => {
-      setUsers(prev => prev.map(u => (u.id === userId ? { ...u, status } : u)));
-      setConversations(prev =>
-        prev.map(conv =>
+      setUsers((prev) =>
+        prev.map((u) => (u.id === userId ? { ...u, status } : u))
+      );
+      setConversations((prev) =>
+        prev.map((conv) =>
           conv.other_user_id === userId
             ? { ...conv, other_user_status: status }
             : conv
         )
       );
       if (selectedConversation?.id === userId) {
-        setSelectedConversation(prev => (prev ? { ...prev, status } : null));
+        setSelectedConversation((prev) => (prev ? { ...prev, status } : null));
       }
     };
 
     const handleNewConversation = (conversation: Conversation) => {
-      setConversations(prev => {
-        const exists = prev.some(c => c.id === conversation.id);
+      toast.success(`Nouvelle conversation avec ${conversation.other_user_name}`);
+
+      setConversations((prev) => {
+        const exists = prev.some((c) => c.id === conversation.id);
         if (exists) return prev;
-        return [conversation, ...prev];
+        return [{ ...conversation, isNew: true }, ...prev];
       });
-      
+
+      setTimeout(() => {
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conversation.id ? { ...c, isNew: false } : c
+          )
+        );
+      }, 3000);
+
       if (selectedConversation?.id === conversation.other_user_id) {
         setConversationId(conversation.id);
         fetchConversationMessages();
@@ -162,8 +176,8 @@ const Page = () => {
     };
 
     const handleNewUser = (newUser: User) => {
-      setUsers(prevUsers => {
-        if (prevUsers.some(u => u.id === newUser.id)) return prevUsers;
+      setUsers((prevUsers) => {
+        if (prevUsers.some((u) => u.id === newUser.id)) return prevUsers;
         return [...prevUsers, newUser];
       });
     };
@@ -192,7 +206,6 @@ const Page = () => {
     }
   }, [setupSocketListeners, user]);
 
-  // Vérification de l'authentification et initialisation
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -202,11 +215,14 @@ const Page = () => {
           return;
         }
 
-        const response = await fetch("https://backend-kmrt.onrender.com/api/check-auth", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          "https://backend-kmrt.onrender.com/api/check-auth",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (!response.ok) {
           localStorage.removeItem("token");
@@ -224,14 +240,13 @@ const Page = () => {
         setUser(data.user);
         fetchInitialData();
 
-        // Initialiser la connexion Socket.io
         if (!socketRef.current) {
           socketRef.current = io("https://backend-kmrt.onrender.com", {
             auth: { token },
             withCredentials: true,
           });
 
-          socketRef.current.on('connect', () => {
+          socketRef.current.on("connect", () => {
             fetchInitialData();
             if (selectedConversation) {
               fetchConversationMessages();
@@ -266,11 +281,14 @@ const Page = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const usersResponse = await fetch("https://backend-kmrt.onrender.com/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const usersResponse = await fetch(
+        "https://backend-kmrt.onrender.com/api/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const usersData = await usersResponse.json();
       if (usersData.success) setUsers(usersData.users);
 
@@ -286,15 +304,25 @@ const Page = () => {
   const fetchConversations = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backend-kmrt.onrender.com/api/conversations", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "https://backend-kmrt.onrender.com/api/conversations",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await response.json();
 
       if (data.success) {
-        setConversations(data.conversations);
+        setConversations((prev) => {
+          const newConversations = data.conversations.filter(
+            (newConv: Conversation) => 
+              !prev.some((prevConv) => prevConv.id === newConv.id)
+          );
+          return [...newConversations, ...prev];
+        });
+        
         const count = data.conversations.reduce(
           (acc: number, conv: any) => acc + (conv.unread_count || 0),
           0
@@ -311,11 +339,14 @@ const Page = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backend-kmrt.onrender.com/api/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "https://backend-kmrt.onrender.com/api/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Erreur de chargement du profil");
 
@@ -327,7 +358,9 @@ const Page = () => {
         navigate("/");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue");
+      setError(
+        err instanceof Error ? err.message : "Une erreur inconnue est survenue"
+      );
       navigate("/");
     } finally {
       setLoading(false);
@@ -366,9 +399,11 @@ const Page = () => {
         if (messagesData.success) {
           setMessages(messagesData.messages);
 
-          if (messagesData.messages.some(
-            (msg: Message) => !msg.is_read && msg.sender_id !== user.id
-          )) {
+          if (
+            messagesData.messages.some(
+              (msg: Message) => !msg.is_read && msg.sender_id !== user.id
+            )
+          ) {
             socketRef.current?.emit("mark-as-read", {
               conversationId: convData.conversationId,
             });
@@ -390,7 +425,9 @@ const Page = () => {
   }, [showProfile]);
 
   useEffect(() => {
-    fetchConversationMessages();
+    if (selectedConversation) {
+      fetchConversationMessages();
+    }
   }, [selectedConversation]);
 
   const handleShowMessages = () => {
@@ -423,12 +460,15 @@ const Page = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backend-kmrt.onrender.com/api/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        "https://backend-kmrt.onrender.com/api/logout",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (!response.ok) throw new Error("Erreur lors de la déconnexion");
 
@@ -556,13 +596,16 @@ const Page = () => {
 
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch("https://backend-kmrt.onrender.com/api/profile", {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        "https://backend-kmrt.onrender.com/api/profile",
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
       if (data.success) {
@@ -574,6 +617,7 @@ const Page = () => {
       } else {
         setError(data.message || "Erreur lors de la mise à jour");
       }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError("Erreur lors de la mise à jour du profil");
     } finally {
@@ -591,7 +635,10 @@ const Page = () => {
               alt="Fichier image"
               className="max-w-xs md:max-w-md rounded-lg cursor-pointer"
               onClick={() =>
-                window.open(`https://backend-kmrt.onrender.com${msg.fileUrl}`, "_blank")
+                window.open(
+                  `https://backend-kmrt.onrender.com${msg.fileUrl}`,
+                  "_blank"
+                )
               }
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition duration-200 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -632,7 +679,7 @@ const Page = () => {
   const handleBackToChat = () => {
     setShowMobileUserDetails(false);
   };
-
+  
   if (showProfile) {
     return (
       <div className="flex w-full min-h-screen bg-gray-50">
@@ -1811,18 +1858,23 @@ const Page = () => {
                     new Date(msg.created_at).toDateString() !==
                       new Date(messages[index - 1].created_at).toDateString();
 
-                  const uniqueKey = `${msg.id}_${new Date(msg.created_at).getTime()}`;
+                  const uniqueKey = `${msg.id}_${new Date(
+                    msg.created_at
+                  ).getTime()}`;
                   return (
                     <div key={uniqueKey}>
                       {showDate && (
                         <div className="flex items-center my-6">
                           <div className="flex-1 border-t border-gray-200"></div>
                           <span className="px-3 text-xs text-gray-500">
-                            {new Date(msg.created_at).toLocaleDateString("fr-FR", {
-                              weekday: "long",
-                              day: "numeric",
-                              month: "long",
-                            })}
+                            {new Date(msg.created_at).toLocaleDateString(
+                              "fr-FR",
+                              {
+                                weekday: "long",
+                                day: "numeric",
+                                month: "long",
+                              }
+                            )}
                           </span>
                           <div className="flex-1 border-t border-gray-200"></div>
                         </div>
@@ -1968,18 +2020,23 @@ const Page = () => {
                   new Date(msg.created_at).toDateString() !==
                     new Date(messages[index - 1].created_at).toDateString();
 
-                const uniqueKey = `${msg.id}_${new Date(msg.created_at).getTime()}`;
+                const uniqueKey = `${msg.id}_${new Date(
+                  msg.created_at
+                ).getTime()}`;
                 return (
                   <div key={uniqueKey}>
                     {showDate && (
                       <div className="flex items-center my-6">
                         <div className="flex-1 border-t border-gray-200"></div>
                         <span className="px-3 text-xs text-gray-500">
-                          {new Date(msg.created_at).toLocaleDateString("fr-FR", {
-                            weekday: "long",
-                            day: "numeric",
-                            month: "long",
-                          })}
+                          {new Date(msg.created_at).toLocaleDateString(
+                            "fr-FR",
+                            {
+                              weekday: "long",
+                              day: "numeric",
+                              month: "long",
+                            }
+                          )}
                         </span>
                         <div className="flex-1 border-t border-gray-200"></div>
                       </div>
