@@ -808,6 +808,14 @@ const Page = () => {
             </button>
 
             <button
+              onClick={() => navigate("/groupes")}
+              className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+              title="Groupes"
+            >
+              <FiUsers size={22} />
+            </button>
+
+            <button
               onClick={handleShowProfile}
               className="text-indigo-600 hover:text-indigo-800 transition p-2 rounded-full hover:bg-indigo-50"
               title="Paramètres"
