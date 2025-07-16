@@ -3,13 +3,9 @@ import { useNavigate } from "react-router-dom";
 import {
   FiUsers,
   FiPlus,
-  FiTrash2,
-  FiLogOut,
   FiSearch,
   FiArrowLeft,
-  FiEdit,
   FiCheck,
-  FiX,
   FiUserPlus,
   FiUserMinus,
 } from "react-icons/fi";
@@ -58,7 +54,6 @@ interface Message {
 }
 
 const Groupes = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<GroupDetails | null>(null);
