@@ -1129,6 +1129,14 @@ const Page = () => {
                     <FiSettings size={22} />
                     <span>Paramètres</span>
                   </button>
+                  <button
+                    onClick={() => navigate("/groupes")}
+                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    title="Groupes"
+                  >
+                    <FiUsers size={22} />
+                    <span>Groupes</span>
+                  </button>
                 </div>
 
                 <button
