@@ -13,6 +13,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
+import io from "socket.io-client";
 
 interface User {
   id: number;
@@ -70,6 +71,106 @@ const Groupes = () => {
   const [newGroupDescription, setNewGroupDescription] = useState("");
   const [view, setView] = useState<"list" | "details" | "chat">("list");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<any>(null);
+
+  // Initialiser Socket.io
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    socketRef.current = io("https://backend-kmrt.onrender.com", {
+      auth: { token },
+    });
+
+    // Gérer les événements Socket.io
+    socketRef.current.on("new-group-message", (message: Message) => {
+      if (selectedGroup && message.groupId === selectedGroup.id) {
+        setMessages((prev) => [...prev, message]);
+      }
+      // Mettre à jour le dernier message dans la liste des groupes
+      setGroups((prev) =>
+        prev.map((group) =>
+          group.id === message.groupId
+            ? {
+                ...group,
+                last_message: message.content,
+                last_message_time: message.created_at,
+                unread_count:
+                  view !== "chat" || group.id !== message.groupId
+                    ? group.unread_count + 1
+                    : 0,
+              }
+            : group
+        )
+      );
+    });
+
+    socketRef.current.on("group-updated", (updatedGroup: Group) => {
+      setGroups((prev) =>
+        prev.map((group) =>
+          group.id === updatedGroup.id ? updatedGroup : group
+        )
+      );
+      if (selectedGroup && selectedGroup.id === updatedGroup.id) {
+        setSelectedGroup((prev) =>
+          prev ? { ...prev, ...updatedGroup } : null
+        );
+      }
+    });
+
+    socketRef.current.on("group-member-left", ({ groupId, userId }) => {
+      if (selectedGroup && selectedGroup.id === groupId) {
+        setSelectedGroup((prev) => ({
+          ...prev!,
+          members: prev!.members.filter((m) => m.id !== userId),
+          member_count: prev!.member_count - 1,
+        }));
+      }
+    });
+
+    socketRef.current.on("group-members-added", ({ groupId, members }) => {
+      if (selectedGroup && selectedGroup.id === groupId) {
+        setSelectedGroup((prev) => ({
+          ...prev!,
+          members: [
+            ...prev!.members,
+            ...members.map((user: any) => ({
+              id: user.id,
+              name: user.name,
+              avatar: user.avatar,
+              status: user.status,
+              is_admin: false,
+            })),
+          ],
+          member_count: prev!.member_count + members.length,
+        }));
+      }
+    });
+
+    socketRef.current.on("group-member-removed", ({ groupId, memberId }) => {
+      if (selectedGroup && selectedGroup.id === groupId) {
+        setSelectedGroup((prev) => ({
+          ...prev!,
+          members: prev!.members.filter((m) => m.id !== memberId),
+          member_count: prev!.member_count - 1,
+        }));
+      }
+    });
+
+    socketRef.current.on("group-deleted", ({ groupId }) => {
+      setGroups((prev) => prev.filter((group) => group.id !== groupId));
+      if (selectedGroup && selectedGroup.id === groupId) {
+        setSelectedGroup(null);
+        setView("list");
+      }
+    });
+
+    socketRef.current.on("new-group", (newGroup: Group) => {
+      setGroups((prev) => [...prev, newGroup]);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [selectedGroup, view]);
 
   const getAvatarUrl = (avatarPath: string | null) => {
     if (!avatarPath) return "/uploads/avatars/default.jpg";
@@ -171,7 +272,7 @@ const Groupes = () => {
       const data = await response.json();
       if (data.success) {
         toast.success("Groupe créé avec succès");
-        await fetchGroups(); // Recharger les groupes depuis le serveur
+        await fetchGroups();
         setShowCreateModal(false);
         setNewGroupName("");
         setNewGroupDescription("");
@@ -240,6 +341,9 @@ const Groupes = () => {
       if (data.success) {
         setMessages(data.messages);
         setView("chat");
+        
+        // Marquer les messages comme lus via Socket.io
+        socketRef.current.emit("mark-group-messages-as-read", { groupId });
       }
     } catch (err) {
       console.error("Erreur messages groupe:", err);
@@ -269,7 +373,7 @@ const Groupes = () => {
       const data = await response.json();
       if (data.success) {
         toast.success("Vous avez quitté le groupe");
-        await fetchGroups(); // Recharger les groupes depuis le serveur
+        await fetchGroups();
         setSelectedGroup(null);
         setView("list");
       } else {
@@ -304,7 +408,7 @@ const Groupes = () => {
       const data = await response.json();
       if (data.success) {
         toast.success("Groupe supprimé avec succès");
-        await fetchGroups(); // Recharger les groupes depuis le serveur
+        await fetchGroups();
         setSelectedGroup(null);
         setView("list");
       } else {
@@ -423,33 +527,26 @@ const Groupes = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const response = await fetch(
-        `https://backend-kmrt.onrender.com/api/groups/${selectedGroup.id}/messages`,
+      
+      // Envoyer le message via Socket.io
+      socketRef.current.emit(
+        "send-group-message",
         {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            content: input,
-          }),
+          groupId: selectedGroup.id,
+          content: input,
+        },
+        (response: { success: boolean; message?: Message }) => {
+          if (response.success && response.message) {
+            setMessages((prev) => [...prev, response.message!]);
+            setInput("");
+          } else {
+            toast.error("Erreur lors de l'envoi du message");
+          }
+          setLoading(false);
         }
       );
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
-        setInput("");
-      }
     } catch (err) {
       console.error("Erreur envoi message:", err);
-    } finally {
       setLoading(false);
     }
   };
@@ -1010,4 +1107,4 @@ const Groupes = () => {
   );
 };
 
-export default Groupes;
+export default Groupes; 
