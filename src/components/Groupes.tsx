@@ -76,33 +76,33 @@ const Groupes = () => {
 
   // Initialiser Socket.io
   useEffect(() => {
-  const token = localStorage.getItem("token");
-  socketRef.current = io("https://backend-kmrt.onrender.com", {
-    auth: { token },
-  });
+    const token = localStorage.getItem("token");
+    socketRef.current = io("https://backend-kmrt.onrender.com", {
+      auth: { token },
+    });
 
-  // Gérer les événements Socket.io
-  socketRef.current.on("new-group-message", (message: Message) => {
-    if (selectedGroup && message.groupId === selectedGroup.id) {
-      setMessages((prev) => [...prev, message]);
-    }
-    // Mettre à jour le dernier message dans la liste des groupes
-    setGroups((prev) =>
-      prev.map((group) =>
-        group.id === message.groupId
-          ? {
-              ...group,
-              last_message: message.content,
-              last_message_time: message.created_at,
-              unread_count:
-                view !== "chat" || group.id !== message.groupId
-                  ? group.unread_count + 1
-                  : 0,
-            }
-          : group
-      )
-    );
-  });
+    // Gérer les événements Socket.io
+    socketRef.current.on("new-group-message", (message: Message) => {
+      if (selectedGroup && message.groupId === selectedGroup.id) {
+        setMessages((prev) => [...prev, message]);
+      }
+      // Mettre à jour le dernier message dans la liste des groupes
+      setGroups((prev) =>
+        prev.map((group) =>
+          group.id === message.groupId
+            ? {
+                ...group,
+                last_message: message.content,
+                last_message_time: message.created_at,
+                unread_count:
+                  view !== "chat" || group.id !== message.groupId
+                    ? group.unread_count + 1
+                    : 0,
+              }
+            : group
+        )
+      );
+    });
 
     socketRef.current.on("group-updated", (updatedGroup: Group) => {
       setGroups((prev) =>
@@ -117,52 +117,64 @@ const Groupes = () => {
       }
     });
 
-    socketRef.current.on("group-member-left", ({ groupId, userId }: { groupId: number; userId: number }) => {
-      if (selectedGroup && selectedGroup.id === groupId) {
-        setSelectedGroup((prev) => ({
-          ...prev!,
-          members: prev!.members.filter((m) => m.id !== userId),
-          member_count: prev!.member_count - 1,
-        }));
+    socketRef.current.on(
+      "group-member-left",
+      ({ groupId, userId }: { groupId: number; userId: number }) => {
+        if (selectedGroup && selectedGroup.id === groupId) {
+          setSelectedGroup((prev) => ({
+            ...prev!,
+            members: prev!.members.filter((m) => m.id !== userId),
+            member_count: prev!.member_count - 1,
+          }));
+        }
       }
-    });
+    );
 
-    socketRef.current.on("group-members-added", ({ groupId, members }: { groupId: number; members: any[] }) => {
-      if (selectedGroup && selectedGroup.id === groupId) {
-        setSelectedGroup((prev) => ({
-          ...prev!,
-          members: [
-            ...prev!.members,
-            ...members.map((user: any) => ({
-              id: user.id,
-              name: user.name,
-              avatar: user.avatar,
-              status: user.status,
-              is_admin: false,
-            })),
-          ],
-          member_count: prev!.member_count + members.length,
-        }));
+    socketRef.current.on(
+      "group-members-added",
+      ({ groupId, members }: { groupId: number; members: any[] }) => {
+        if (selectedGroup && selectedGroup.id === groupId) {
+          setSelectedGroup((prev) => ({
+            ...prev!,
+            members: [
+              ...prev!.members,
+              ...members.map((user: any) => ({
+                id: user.id,
+                name: user.name,
+                avatar: user.avatar,
+                status: user.status,
+                is_admin: false,
+              })),
+            ],
+            member_count: prev!.member_count + members.length,
+          }));
+        }
       }
-    });
+    );
 
-    socketRef.current.on("group-member-removed", ({ groupId, memberId }: { groupId: number; memberId: number }) => {
-      if (selectedGroup && selectedGroup.id === groupId) {
-        setSelectedGroup((prev) => ({
-          ...prev!,
-          members: prev!.members.filter((m) => m.id !== memberId),
-          member_count: prev!.member_count - 1,
-        }));
+    socketRef.current.on(
+      "group-member-removed",
+      ({ groupId, memberId }: { groupId: number; memberId: number }) => {
+        if (selectedGroup && selectedGroup.id === groupId) {
+          setSelectedGroup((prev) => ({
+            ...prev!,
+            members: prev!.members.filter((m) => m.id !== memberId),
+            member_count: prev!.member_count - 1,
+          }));
+        }
       }
-    });
+    );
 
-    socketRef.current.on("group-deleted", ({ groupId }: { groupId: number }) => {
-      setGroups((prev) => prev.filter((group) => group.id !== groupId));
-      if (selectedGroup && selectedGroup.id === groupId) {
-        setSelectedGroup(null);
-        setView("list");
+    socketRef.current.on(
+      "group-deleted",
+      ({ groupId }: { groupId: number }) => {
+        setGroups((prev) => prev.filter((group) => group.id !== groupId));
+        if (selectedGroup && selectedGroup.id === groupId) {
+          setSelectedGroup(null);
+          setView("list");
+        }
       }
-    });
+    );
 
     socketRef.current.on("new-group", (newGroup: Group) => {
       setGroups((prev) => [...prev, newGroup]);
@@ -175,7 +187,9 @@ const Groupes = () => {
 
   const getAvatarUrl = (avatarPath: string | null) => {
     if (!avatarPath) return "/uploads/avatars/default.jpg";
-    return avatarPath.startsWith("http") ? avatarPath : `https://backend-kmrt.onrender.com${avatarPath}`;
+    return avatarPath.startsWith("http")
+      ? avatarPath
+      : `https://backend-kmrt.onrender.com${avatarPath}`;
   };
 
   const fetchGroups = useCallback(async () => {
@@ -190,11 +204,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setGroups(data.groups);
@@ -218,11 +232,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setUsers(data.users);
@@ -301,11 +315,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setSelectedGroup(data.group);
@@ -333,16 +347,16 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         setMessages(data.messages);
         setView("chat");
-        
+
         // Marquer les messages comme lus via Socket.io
         socketRef.current.emit("mark-group-messages-as-read", { groupId });
       }
@@ -366,11 +380,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Vous avez quitté le groupe");
@@ -401,11 +415,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Groupe supprimé avec succès");
@@ -445,11 +459,11 @@ const Groupes = () => {
           }),
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Membres ajoutés avec succès");
@@ -496,11 +510,11 @@ const Groupes = () => {
           },
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       if (data.success) {
         toast.success("Membre supprimé du groupe");
@@ -524,32 +538,32 @@ const Groupes = () => {
   };
 
   const sendMessage = async () => {
-  if (!input.trim() || !selectedGroup) return;
+    if (!input.trim() || !selectedGroup) return;
 
-  try {
-    setLoading(true);
-    
-    // Envoyer le message via Socket.io
-    socketRef.current.emit(
-      "send-group-message",
-      {
-        groupId: selectedGroup.id,
-        content: input,
-      },
-      (response: { success: boolean }) => {
-        if (response.success) {
-          setInput(""); // Juste vider l'input si succès
-        } else {
-          toast.error("Erreur lors de l'envoi du message");
+    try {
+      setLoading(true);
+
+      // Envoyer le message via Socket.io
+      socketRef.current.emit(
+        "send-group-message",
+        {
+          groupId: selectedGroup.id,
+          content: input,
+        },
+        (response: { success: boolean }) => {
+          if (response.success) {
+            setInput(""); // Juste vider l'input si succès
+          } else {
+            toast.error("Erreur lors de l'envoi du message");
+          }
+          setLoading(false);
         }
-        setLoading(false);
-      }
-    );
-  } catch (err) {
-    console.error("Erreur envoi message:", err);
-    setLoading(false);
-  }
-};
+      );
+    } catch (err) {
+      console.error("Erreur envoi message:", err);
+      setLoading(false);
+    }
+  };
 
   const toggleUserSelection = (userId: number) => {
     setSelectedUsers((prev) =>
@@ -620,7 +634,6 @@ const Groupes = () => {
           )}
         </div>
       </div>
-
       {/* Group List View */}
       {view === "list" && (
         <div className="flex-1 overflow-y-auto">
@@ -673,7 +686,9 @@ const Groupes = () => {
                         </h3>
                         {group.last_message_time && (
                           <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                            {new Date(group.last_message_time).toLocaleTimeString([], {
+                            {new Date(
+                              group.last_message_time
+                            ).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
@@ -693,7 +708,6 @@ const Groupes = () => {
           )}
         </div>
       )}
-
       {/* Group Details View */}
       {view === "details" && selectedGroup && (
         <div className="flex-1 overflow-y-auto p-6">
@@ -718,7 +732,9 @@ const Groupes = () => {
                     }}
                   />
                   <div>
-                    <h4 className="font-medium">{selectedGroup.created_by_name}</h4>
+                    <h4 className="font-medium">
+                      {selectedGroup.created_by_name}
+                    </h4>
                     <p className="text-xs text-gray-500">Créateur</p>
                   </div>
                 </div>
@@ -740,7 +756,10 @@ const Groupes = () => {
                 </div>
                 <div className="space-y-3">
                   {selectedGroup.members.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between">
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between"
+                    >
                       <div className="flex items-center">
                         <div className="relative mr-3">
                           <img
@@ -748,7 +767,8 @@ const Groupes = () => {
                             alt={member.name}
                             className="w-10 h-10 rounded-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = getAvatarUrl(null);
+                              (e.target as HTMLImageElement).src =
+                                getAvatarUrl(null);
                             }}
                           />
                           <div
@@ -766,7 +786,8 @@ const Groupes = () => {
                           </p>
                         </div>
                       </div>
-                      {(selectedGroup.is_admin || member.id === selectedGroup.created_by) && (
+                      {(selectedGroup.is_admin ||
+                        member.id === selectedGroup.created_by) && (
                         <button
                           onClick={() => handleRemoveMember(member.id)}
                           disabled={member.id === selectedGroup.created_by}
@@ -817,110 +838,107 @@ const Groupes = () => {
           </div>
         </div>
       )}
-
       {/* Group Chat View */}
-      // Modifiez la partie Group Chat View comme suit :
-{view === "chat" && selectedGroup && (
-  <div className="flex flex-col h-full">
-    {/* Navbar fixe en haut */}
-    <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 z-10">
-      <button
-        onClick={() => setView("details")}
-        className="text-gray-600 hover:text-indigo-600"
-      >
-        <FiArrowLeft size={20} />
-      </button>
-      <h2 className="text-lg font-medium">{selectedGroup.name}</h2>
-      <button
-        onClick={() => setView("details")}
-        className="text-gray-600 hover:text-indigo-600"
-      >
-        <BsThreeDotsVertical size={20} />
-      </button>
-    </div>
+      {view === "chat" && selectedGroup && (
+        <div className="flex flex-col h-full">
+          {/* Navbar fixe en haut */}
+          <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between sticky top-0 z-10">
+            <button
+              onClick={() => setView("details")}
+              className="text-gray-600 hover:text-indigo-600"
+            >
+              <FiArrowLeft size={20} />
+            </button>
+            <h2 className="text-lg font-medium">{selectedGroup.name}</h2>
+            <button
+              onClick={() => setView("details")}
+              className="text-gray-600 hover:text-indigo-600"
+            >
+              <BsThreeDotsVertical size={20} />
+            </button>
+          </div>
 
-    {/* Zone des messages avec défilement */}
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-      {messages.map((msg) => (
-        <div
-          key={msg.id}
-          className={`flex ${
-            msg.sender_id === selectedGroup.created_by
-              ? "justify-start"
-              : "justify-end"
-          }`}
-        >
-          <div
-            className={`max-w-xs px-4 py-2 rounded-2xl ${
-              msg.sender_id === selectedGroup.created_by
-                ? "bg-white text-gray-800 rounded-bl-none shadow-sm"
-                : "bg-indigo-600 text-white rounded-br-none"
-            }`}
-          >
-            <p className="whitespace-pre-wrap">{msg.content}</p>
-            <div className="flex items-center justify-end mt-1 space-x-1 text-xs">
-              <span>
-                {new Date(msg.created_at).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+          {/* Zone des messages avec défilement */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.sender_id === selectedGroup.created_by
+                    ? "justify-start"
+                    : "justify-end"
+                }`}
+              >
+                <div
+                  className={`max-w-xs px-4 py-2 rounded-2xl ${
+                    msg.sender_id === selectedGroup.created_by
+                      ? "bg-white text-gray-800 rounded-bl-none shadow-sm"
+                      : "bg-indigo-600 text-white rounded-br-none"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{msg.content}</p>
+                  <div className="flex items-center justify-end mt-1 space-x-1 text-xs">
+                    <span>
+                      {new Date(msg.created_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Zone de saisie fixe en bas */}
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3">
+            <div className="flex items-center bg-gray-100 rounded-full px-4 py-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                placeholder="Écrire un message..."
+                className="flex-1 bg-transparent outline-none text-sm px-2 py-1"
+              />
+              {loading ? (
+                <div className="ml-2 p-2">
+                  <div className="w-5 h-5 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <button
+                  onClick={sendMessage}
+                  disabled={input.trim() === ""}
+                  className={`ml-2 p-2 rounded-full transition shadow-md ${
+                    input.trim() === ""
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  }`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
-      ))}
-      <div ref={messagesEndRef} />
-    </div>
-
-    {/* Zone de saisie fixe en bas */}
-    <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3">
-      <div className="flex items-center bg-gray-100 rounded-full px-4 py-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendMessage();
-            }
-          }}
-          placeholder="Écrire un message..."
-          className="flex-1 bg-transparent outline-none text-sm px-2 py-1"
-        />
-        {loading ? (
-          <div className="ml-2 p-2">
-            <div className="w-5 h-5 border-2 border-gray-300 border-t-indigo-600 rounded-full animate-spin"></div>
-          </div>
-        ) : (
-          <button
-            onClick={sendMessage}
-            disabled={input.trim() === ""}
-            className={`ml-2 p-2 rounded-full transition shadow-md ${
-              input.trim() === ""
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-indigo-600 hover:bg-indigo-700 text-white"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
-                clipRule="evenodd"
-            />
-            </svg>
-          </button>
-        )}
-      </div>
-    </div>
-  </div>
-)}
-
+      )}
       {/* Create Group Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -976,7 +994,8 @@ const Groupes = () => {
                               alt={user.name}
                               className="w-10 h-10 rounded-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = getAvatarUrl(null);
+                                (e.target as HTMLImageElement).src =
+                                  getAvatarUrl(null);
                               }}
                             />
                             <div
@@ -1015,9 +1034,15 @@ const Groupes = () => {
                 </button>
                 <button
                   onClick={handleCreateGroup}
-                  disabled={loading || !newGroupName.trim() || selectedUsers.length === 0}
+                  disabled={
+                    loading ||
+                    !newGroupName.trim() ||
+                    selectedUsers.length === 0
+                  }
                   className={`px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                    loading || !newGroupName.trim() || selectedUsers.length === 0
+                    loading ||
+                    !newGroupName.trim() ||
+                    selectedUsers.length === 0
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }`}
@@ -1029,7 +1054,6 @@ const Groupes = () => {
           </div>
         </div>
       )}
-
       {/* Add Members Modal */}
       {showAddMembersModal && selectedGroup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1057,7 +1081,8 @@ const Groupes = () => {
                             alt={user.name}
                             className="w-10 h-10 rounded-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = getAvatarUrl(null);
+                              (e.target as HTMLImageElement).src =
+                                getAvatarUrl(null);
                             }}
                           />
                           <div
@@ -1111,4 +1136,4 @@ const Groupes = () => {
   );
 };
 
-export default Groupes; 
+export default Groupes;
