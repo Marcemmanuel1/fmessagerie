@@ -53,6 +53,7 @@ interface Message {
   sender_id: number;
   sender_name: string;
   sender_avatar: string | null;
+  groupId: number;
 }
 
 const Groupes = () => {
@@ -116,7 +117,7 @@ const Groupes = () => {
       }
     });
 
-    socketRef.current.on("group-member-left", ({ groupId, userId }) => {
+    socketRef.current.on("group-member-left", ({ groupId, userId }: { groupId: number; userId: number }) => {
       if (selectedGroup && selectedGroup.id === groupId) {
         setSelectedGroup((prev) => ({
           ...prev!,
@@ -126,7 +127,7 @@ const Groupes = () => {
       }
     });
 
-    socketRef.current.on("group-members-added", ({ groupId, members }) => {
+    socketRef.current.on("group-members-added", ({ groupId, members }: { groupId: number; members: any[] }) => {
       if (selectedGroup && selectedGroup.id === groupId) {
         setSelectedGroup((prev) => ({
           ...prev!,
@@ -145,7 +146,7 @@ const Groupes = () => {
       }
     });
 
-    socketRef.current.on("group-member-removed", ({ groupId, memberId }) => {
+    socketRef.current.on("group-member-removed", ({ groupId, memberId }: { groupId: number; memberId: number }) => {
       if (selectedGroup && selectedGroup.id === groupId) {
         setSelectedGroup((prev) => ({
           ...prev!,
@@ -155,7 +156,7 @@ const Groupes = () => {
       }
     });
 
-    socketRef.current.on("group-deleted", ({ groupId }) => {
+    socketRef.current.on("group-deleted", ({ groupId }: { groupId: number }) => {
       setGroups((prev) => prev.filter((group) => group.id !== groupId));
       if (selectedGroup && selectedGroup.id === groupId) {
         setSelectedGroup(null);
@@ -530,12 +531,12 @@ const Groupes = () => {
       
       // Envoyer le message via Socket.io
       socketRef.current.emit(
-        "send-group-message",
-        {
-          groupId: selectedGroup.id,
-          content: input,
-        },
-        (response: { success: boolean; message?: Message }) => {
+  "send-group-message",
+  {
+    groupId: selectedGroup.id,
+    content: input,
+  },
+  (response: { success: boolean; message?: Message }) => {
           if (response.success && response.message) {
             setMessages((prev) => [...prev, response.message!]);
             setInput("");
