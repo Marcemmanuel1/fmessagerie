@@ -76,33 +76,33 @@ const Groupes = () => {
 
   // Initialiser Socket.io
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    socketRef.current = io("https://backend-kmrt.onrender.com", {
-      auth: { token },
-    });
+  const token = localStorage.getItem("token");
+  socketRef.current = io("https://backend-kmrt.onrender.com", {
+    auth: { token },
+  });
 
-    // Gérer les événements Socket.io
-    socketRef.current.on("new-group-message", (message: Message) => {
-      if (selectedGroup && message.groupId === selectedGroup.id) {
-        setMessages((prev) => [...prev, message]);
-      }
-      // Mettre à jour le dernier message dans la liste des groupes
-      setGroups((prev) =>
-        prev.map((group) =>
-          group.id === message.groupId
-            ? {
-                ...group,
-                last_message: message.content,
-                last_message_time: message.created_at,
-                unread_count:
-                  view !== "chat" || group.id !== message.groupId
-                    ? group.unread_count + 1
-                    : 0,
-              }
-            : group
-        )
-      );
-    });
+  // Gérer les événements Socket.io
+  socketRef.current.on("new-group-message", (message: Message) => {
+    if (selectedGroup && message.groupId === selectedGroup.id) {
+      setMessages((prev) => [...prev, message]);
+    }
+    // Mettre à jour le dernier message dans la liste des groupes
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id === message.groupId
+          ? {
+              ...group,
+              last_message: message.content,
+              last_message_time: message.created_at,
+              unread_count:
+                view !== "chat" || group.id !== message.groupId
+                  ? group.unread_count + 1
+                  : 0,
+            }
+          : group
+      )
+    );
+  });
 
     socketRef.current.on("group-updated", (updatedGroup: Group) => {
       setGroups((prev) =>
@@ -524,33 +524,32 @@ const Groupes = () => {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !selectedGroup) return;
+  if (!input.trim() || !selectedGroup) return;
 
-    try {
-      setLoading(true);
-      
-      // Envoyer le message via Socket.io
-      socketRef.current.emit(
-  "send-group-message",
-  {
-    groupId: selectedGroup.id,
-    content: input,
-  },
-  (response: { success: boolean; message?: Message }) => {
-          if (response.success && response.message) {
-            setMessages((prev) => [...prev, response.message!]);
-            setInput("");
-          } else {
-            toast.error("Erreur lors de l'envoi du message");
-          }
-          setLoading(false);
+  try {
+    setLoading(true);
+    
+    // Envoyer le message via Socket.io
+    socketRef.current.emit(
+      "send-group-message",
+      {
+        groupId: selectedGroup.id,
+        content: input,
+      },
+      (response: { success: boolean }) => {
+        if (response.success) {
+          setInput(""); // Juste vider l'input si succès
+        } else {
+          toast.error("Erreur lors de l'envoi du message");
         }
-      );
-    } catch (err) {
-      console.error("Erreur envoi message:", err);
-      setLoading(false);
-    }
-  };
+        setLoading(false);
+      }
+    );
+  } catch (err) {
+    console.error("Erreur envoi message:", err);
+    setLoading(false);
+  }
+};
 
   const toggleUserSelection = (userId: number) => {
     setSelectedUsers((prev) =>
