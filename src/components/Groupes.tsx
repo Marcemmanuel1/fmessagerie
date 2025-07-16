@@ -72,8 +72,8 @@ const Groupes = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const getAvatarUrl = (avatarPath: string | null) => {
-    if (!avatarPath) return "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
-    return `https://backend-kmrt.onrender.com${avatarPath}`;
+    if (!avatarPath) return "/uploads/avatars/default.jpg";
+    return avatarPath.startsWith("http") ? avatarPath : `https://backend-kmrt.onrender.com${avatarPath}`;
   };
 
   const fetchGroups = useCallback(async () => {
