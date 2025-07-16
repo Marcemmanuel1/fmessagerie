@@ -17,6 +17,7 @@ import {
   FiVideo,
   FiMenu,
   FiChevronLeft,
+  FiUsers,
 } from "react-icons/fi";
 import { BsThreeDotsVertical, BsCheckAll } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
@@ -734,6 +735,14 @@ const Page = () => {
                         {unreadCount}
                       </span>
                     )}
+                  </button>
+
+                  <button
+                    onClick={() => navigate("/groupes")}
+                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    title="Groupes"
+                  >
+                    <FiUsers size={22} />
                   </button>
 
                   <button

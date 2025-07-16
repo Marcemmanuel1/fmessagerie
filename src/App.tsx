@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Inscription from "./components/Inscription";
 import Login from "./components/Login";
 import Page from "./components/Page";
+import Groupes from "./components/Groupes"; // Importez le composant Groupes
 import PrivateRoute from "./components/PrivateRoute";
 
 export default function App() {
@@ -15,6 +16,14 @@ export default function App() {
           element={
             <PrivateRoute>
               <Page />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/groupes"
+          element={
+            <PrivateRoute>
+              <Groupes />
             </PrivateRoute>
           }
         />
