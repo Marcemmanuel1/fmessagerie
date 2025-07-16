@@ -22,8 +22,8 @@ import {
 import { BsThreeDotsVertical, BsCheckAll } from "react-icons/bs";
 import { IoMdSend } from "react-icons/io";
 import io, { Socket } from "socket.io-client";
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface User {
   id: number;
@@ -64,7 +64,9 @@ interface Message {
 const Page = () => {
   const navigate = useNavigate();
   const [showProfile, setShowProfile] = useState(false);
-  const [selectedConversation, setSelectedConversation] = useState<User | null>(null);
+  const [selectedConversation, setSelectedConversation] = useState<User | null>(
+    null
+  );
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -81,7 +83,8 @@ const Page = () => {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [error, setError] = useState("");
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [showMobileConversationList, setShowMobileConversationList] = useState(false);
+  const [showMobileConversationList, setShowMobileConversationList] =
+    useState(false);
   const [showMobileUserDetails, setShowMobileUserDetails] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -103,7 +106,10 @@ const Page = () => {
         return [...prev, message];
       });
 
-      if (message.conversationId === conversationId && message.sender_id !== user.id) {
+      if (
+        message.conversationId === conversationId &&
+        message.sender_id !== user.id
+      ) {
         socket.emit("mark-as-read", {
           conversationId: message.conversationId,
         });
@@ -137,7 +143,13 @@ const Page = () => {
       );
     };
 
-    const handleUserStatusChanged = ({ userId, status }: { userId: number; status: string }) => {
+    const handleUserStatusChanged = ({
+      userId,
+      status,
+    }: {
+      userId: number;
+      status: string;
+    }) => {
       setUsers((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, status } : u))
       );
@@ -154,7 +166,9 @@ const Page = () => {
     };
 
     const handleNewConversation = (conversation: Conversation) => {
-      toast.success(`Nouvelle conversation avec ${conversation.other_user_name}`);
+      toast.success(
+        `Nouvelle conversation avec ${conversation.other_user_name}`
+      );
 
       setConversations((prev) => {
         const exists = prev.some((c) => c.id === conversation.id);
@@ -318,12 +332,12 @@ const Page = () => {
       if (data.success) {
         setConversations((prev) => {
           const newConversations = data.conversations.filter(
-            (newConv: Conversation) => 
+            (newConv: Conversation) =>
               !prev.some((prevConv) => prevConv.id === newConv.id)
           );
           return [...newConversations, ...prev];
         });
-        
+
         const count = data.conversations.reduce(
           (acc: number, conv: any) => acc + (conv.unread_count || 0),
           0
@@ -618,7 +632,7 @@ const Page = () => {
       } else {
         setError(data.message || "Erreur lors de la mise à jour");
       }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setError("Erreur lors de la mise à jour du profil");
     } finally {
@@ -680,7 +694,7 @@ const Page = () => {
   const handleBackToChat = () => {
     setShowMobileUserDetails(false);
   };
-  
+
   if (showProfile) {
     return (
       <div className="flex w-full min-h-screen bg-gray-50">
@@ -743,6 +757,7 @@ const Page = () => {
                     title="Groupes"
                   >
                     <FiUsers size={22} />
+                    <span>Groupes</span>
                   </button>
 
                   <button
@@ -1121,6 +1136,14 @@ const Page = () => {
                       </span>
                     )}
                   </button>
+                  <button
+                    onClick={() => navigate("/groupes")}
+                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    title="Groupes"
+                  >
+                    <FiUsers size={22} />
+                    <span>Groupes</span>
+                  </button>
 
                   <button
                     onClick={handleShowProfile}
@@ -1190,6 +1213,13 @@ const Page = () => {
                   {unreadCount}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => navigate("/groupes")}
+              className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+              title="Groupes"
+            >
+              <FiUsers size={22} />
             </button>
 
             <button
@@ -1358,6 +1388,14 @@ const Page = () => {
                     </span>
                   )}
                 </button>
+                <button
+                  onClick={() => navigate("/groupes")}
+                  className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                  title="Groupes"
+                >
+                  <FiUsers size={22} />
+                  <span>Groupes</span>
+                </button>
 
                 <button
                   onClick={handleShowProfile}
@@ -1419,6 +1457,13 @@ const Page = () => {
                 {unreadCount}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => navigate("/groupes")}
+            className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+            title="Groupes"
+          >
+            <FiUsers size={22} />
           </button>
 
           <button

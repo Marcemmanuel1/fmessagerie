@@ -7,15 +7,17 @@ import {
   FiCheck,
   FiUserPlus,
   FiUserMinus,
+  FiMessageSquare,
 } from "react-icons/fi";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: number;
   name: string;
-  avatar: string;
+  avatar: string | null;
   status: string;
 }
 
@@ -25,7 +27,7 @@ interface Group {
   description?: string;
   created_by: number;
   created_by_name: string;
-  created_by_avatar: string;
+  created_by_avatar: string | null;
   member_count: number;
   last_message?: string;
   last_message_time?: string;
@@ -37,7 +39,7 @@ interface GroupDetails extends Group {
   members: {
     id: number;
     name: string;
-    avatar: string;
+    avatar: string | null;
     status: string;
     is_admin: boolean;
   }[];
@@ -49,10 +51,11 @@ interface Message {
   created_at: string;
   sender_id: number;
   sender_name: string;
-  sender_avatar: string;
+  sender_avatar: string | null;
 }
 
 const Groupes = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<GroupDetails | null>(null);
@@ -68,6 +71,11 @@ const Groupes = () => {
   const [view, setView] = useState<"list" | "details" | "chat">("list");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const getAvatarUrl = (avatarPath: string | null) => {
+    if (!avatarPath) return "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
+    return `https://backend-kmrt.onrender.com${avatarPath}`;
+  };
+
   const fetchGroups = useCallback(async () => {
     try {
       setLoading(true);
@@ -80,6 +88,11 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setGroups(data.groups);
@@ -103,6 +116,11 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setUsers(data.users);
@@ -146,10 +164,14 @@ const Groupes = () => {
         }
       );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const data = await response.json();
       if (data.success) {
         toast.success("Groupe créé avec succès");
-        setGroups((prev) => [data.group, ...prev]);
+        await fetchGroups(); // Recharger les groupes depuis le serveur
         setShowCreateModal(false);
         setNewGroupName("");
         setNewGroupDescription("");
@@ -177,6 +199,11 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setSelectedGroup(data.group);
@@ -204,6 +231,11 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setMessages(data.messages);
@@ -229,10 +261,15 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         toast.success("Vous avez quitté le groupe");
-        setGroups((prev) => prev.filter((g) => g.id !== groupId));
+        await fetchGroups(); // Recharger les groupes depuis le serveur
         setSelectedGroup(null);
         setView("list");
       } else {
@@ -259,10 +296,15 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         toast.success("Groupe supprimé avec succès");
-        setGroups((prev) => prev.filter((g) => g.id !== groupId));
+        await fetchGroups(); // Recharger les groupes depuis le serveur
         setSelectedGroup(null);
         setView("list");
       } else {
@@ -298,6 +340,11 @@ const Groupes = () => {
           }),
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         toast.success("Membres ajoutés avec succès");
@@ -344,6 +391,11 @@ const Groupes = () => {
           },
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         toast.success("Membre supprimé du groupe");
@@ -385,6 +437,11 @@ const Groupes = () => {
           }),
         }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setMessages((prev) => [...prev, data.message]);
@@ -420,21 +477,39 @@ const Groupes = () => {
       {/* Header */}
       <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
         {view !== "list" ? (
-          <button
-            onClick={() => {
-              if (view === "details") {
-                setView("list");
-              } else {
-                setView("details");
-              }
-              setSelectedGroup(null);
-            }}
-            className="text-gray-600 hover:text-indigo-600"
-          >
-            <FiArrowLeft size={20} />
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => {
+                if (view === "details") {
+                  setView("list");
+                } else {
+                  setView("details");
+                }
+                setSelectedGroup(null);
+              }}
+              className="text-gray-600 hover:text-indigo-600"
+            >
+              <FiArrowLeft size={20} />
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="text-gray-600 hover:text-indigo-600 flex items-center"
+            >
+              <FiArrowLeft className="mr-1" />
+              Retour
+            </button>
+          </div>
         ) : (
-          <h2 className="text-xl font-semibold text-gray-800">Groupes</h2>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => navigate(-1)}
+              className="text-gray-600 hover:text-indigo-600 flex items-center"
+            >
+              <FiArrowLeft className="mr-1" />
+              Retour
+            </button>
+            <h2 className="text-xl font-semibold text-gray-800">Groupes</h2>
+          </div>
         )}
         <div className="flex items-center space-x-4">
           {view === "list" && (
@@ -538,16 +613,11 @@ const Groupes = () => {
                 </h3>
                 <div className="flex items-center">
                   <img
-                    src={
-                      selectedGroup.created_by_avatar
-                        ? `https://backend-kmrt.onrender.com${selectedGroup.created_by_avatar}`
-                        : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
-                    }
+                    src={getAvatarUrl(selectedGroup.created_by_avatar)}
                     alt={selectedGroup.created_by_name}
                     className="w-10 h-10 rounded-full object-cover mr-3"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
+                      (e.target as HTMLImageElement).src = getAvatarUrl(null);
                     }}
                   />
                   <div>
@@ -577,16 +647,11 @@ const Groupes = () => {
                       <div className="flex items-center">
                         <div className="relative mr-3">
                           <img
-                            src={
-                              member.avatar
-                                ? `https://backend-kmrt.onrender.com${member.avatar}`
-                                : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
-                            }
+                            src={getAvatarUrl(member.avatar)}
                             alt={member.name}
                             className="w-10 h-10 rounded-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
+                              (e.target as HTMLImageElement).src = getAvatarUrl(null);
                             }}
                           />
                           <div
@@ -630,8 +695,9 @@ const Groupes = () => {
               <div className="mt-8 flex space-x-3">
                 <button
                   onClick={() => fetchGroupMessages(selectedGroup.id)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex-1"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex-1 flex items-center justify-center"
                 >
+                  <FiMessageSquare className="mr-2" />
                   Voir les messages
                 </button>
                 {selectedGroup.is_admin ? (
@@ -805,16 +871,11 @@ const Groupes = () => {
                         >
                           <div className="relative mr-3">
                             <img
-                              src={
-                                user.avatar
-                                  ? `https://backend-kmrt.onrender.com${user.avatar}`
-                                  : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
-                              }
+                              src={getAvatarUrl(user.avatar)}
                               alt={user.name}
                               className="w-10 h-10 rounded-full object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
+                                (e.target as HTMLImageElement).src = getAvatarUrl(null);
                               }}
                             />
                             <div
@@ -891,16 +952,11 @@ const Groupes = () => {
                       >
                         <div className="relative mr-3">
                           <img
-                            src={
-                              user.avatar
-                                ? `https://backend-kmrt.onrender.com${user.avatar}`
-                                : "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg"
-                            }
+                            src={getAvatarUrl(user.avatar)}
                             alt={user.name}
                             className="w-10 h-10 rounded-full object-cover"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                "https://backend-kmrt.onrender.com/uploads/avatars/default.jpg";
+                              (e.target as HTMLImageElement).src = getAvatarUrl(null);
                             }}
                           />
                           <div
