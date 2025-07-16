@@ -753,7 +753,7 @@ const Page = () => {
 
                   <button
                     onClick={() => navigate("/groupes")}
-                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    className="flex text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
                     title="Groupes"
                   >
                     <FiUsers size={22} />
@@ -1138,7 +1138,7 @@ const Page = () => {
                   </button>
                   <button
                     onClick={() => navigate("/groupes")}
-                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    className="flex text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
                     title="Groupes"
                   >
                     <FiUsers size={22} />
@@ -1154,7 +1154,7 @@ const Page = () => {
                   </button>
                   <button
                     onClick={() => navigate("/groupes")}
-                    className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                    className="flex text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
                     title="Groupes"
                   >
                     <FiUsers size={22} />
@@ -1390,7 +1390,7 @@ const Page = () => {
                 </button>
                 <button
                   onClick={() => navigate("/groupes")}
-                  className="text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
+                  className="flex text-gray-500 hover:text-indigo-600 transition p-2 rounded-full hover:bg-indigo-50"
                   title="Groupes"
                 >
                   <FiUsers size={22} />
